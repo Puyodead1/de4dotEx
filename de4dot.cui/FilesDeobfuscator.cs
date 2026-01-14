@@ -27,7 +27,7 @@ using de4dot.code.renamer;
 using de4dot.code.deobfuscators;
 
 namespace de4dot.cui {
-	class FilesDeobfuscator {
+	public class FilesDeobfuscator {
 		Options options;
 		IDeobfuscatorContext deobfuscatorContext = new DeobfuscatorContext();
 
