@@ -5,18 +5,10 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);SYSLIB0011</NoWarn>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="deobfuscators\Agile_NET\vm\v2\CsvmResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CsvmResources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\AssemblyData\AssemblyData.csproj" />
     <ProjectReference Include="..\de4dot.blocks\de4dot.blocks.csproj" />
     <ProjectReference Include="..\de4dot.mdecrypt\de4dot.mdecrypt.csproj" />
   </ItemGroup>

@@ -25,7 +25,6 @@ using dnlib.DotNet.Writer;
 using de4dot.code;
 using de4dot.code.renamer;
 using de4dot.code.deobfuscators;
-using de4dot.code.AssemblyClient;
 
 namespace de4dot.cui {
 	class FilesDeobfuscator {
@@ -46,7 +45,6 @@ namespace de4dot.cui {
 			public bool OneFileAtATime { get; set; }
 			public DecrypterType? DefaultStringDecrypterType { get; set; }
 			public List<string> DefaultStringDecrypterMethods { get; private set; }
-			public IAssemblyClientFactory AssemblyClientFactory { get; set; }
 
 			public Options() {
 				ModuleContext = new ModuleContext(TheAssemblyResolver.Instance);
@@ -149,7 +147,6 @@ namespace de4dot.cui {
 				CreateDeobfuscators = () => CreateDeobfuscators(),
 				DefaultStringDecrypterType = options.DefaultStringDecrypterType,
 				DefaultStringDecrypterMethods = options.DefaultStringDecrypterMethods,
-				AssemblyClientFactory = options.AssemblyClientFactory,
 				DeobfuscatorContext = deobfuscatorContext,
 				ControlFlowDeobfuscation = options.ControlFlowDeobfuscation,
 				KeepObfuscatorTypes = options.KeepObfuscatorTypes,
@@ -174,7 +171,6 @@ namespace de4dot.cui {
 				public Func<IList<IDeobfuscator>> CreateDeobfuscators { get; set; }
 				public DecrypterType? DefaultStringDecrypterType { get; set; }
 				public List<string> DefaultStringDecrypterMethods { get; set; }
-				public IAssemblyClientFactory AssemblyClientFactory { get; set; }
 				public IDeobfuscatorContext DeobfuscatorContext { get; set; }
 				public bool ControlFlowDeobfuscation { get; set; }
 				public bool KeepObfuscatorTypes { get; set; }
@@ -344,7 +340,7 @@ namespace de4dot.cui {
 						throw new UserException($"Input and output filename is the same: {fileOptions.Filename}");
 				}
 
-				var obfuscatedFile = new ObfuscatedFile(fileOptions, options.ModuleContext, options.AssemblyClientFactory);
+				var obfuscatedFile = new ObfuscatedFile(fileOptions, options.ModuleContext);
 				if (Add(obfuscatedFile, searchDir.SkipUnknownObfuscators, false))
 					return obfuscatedFile;
 				obfuscatedFile.Dispose();

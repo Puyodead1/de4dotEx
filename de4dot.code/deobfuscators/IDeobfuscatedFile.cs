@@ -21,7 +21,6 @@ namespace de4dot.code.deobfuscators {
 	public interface IDeobfuscatedFile : ISimpleDeobfuscator {
 		IDeobfuscatorContext DeobfuscatorContext { get; }
 		void CreateAssemblyFile(byte[] data, string assemblyName, string extension);
-		void StringDecryptersAdded();
 		void SetDeobfuscator(IDeobfuscator deob);
 	}
 }

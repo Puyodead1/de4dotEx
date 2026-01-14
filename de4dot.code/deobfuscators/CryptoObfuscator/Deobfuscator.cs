@@ -110,7 +110,7 @@ namespace de4dot.code.deobfuscators.CryptoObfuscator {
 		public Deobfuscator(Options options)
 			: base(options) {
 			this.options = options;
-			StringFeatures = StringFeatures.AllowStaticDecryption | StringFeatures.AllowDynamicDecryption;
+			StringFeatures = StringFeatures.AllowStaticDecryption;
 		}
 
 		protected override int DetectInternal() {
@@ -196,7 +196,6 @@ namespace de4dot.code.deobfuscators.CryptoObfuscator {
 				staticStringInliner.Add(stringDecrypter.Method, (method, gim, args) => {
 					return stringDecrypter.Decrypt((int)args[0]);
 				});
-				DeobfuscatedFile.StringDecryptersAdded();
 			}
 
 			methodsDecrypter.Decrypt(resourceDecrypter, DeobfuscatedFile);

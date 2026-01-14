@@ -23,7 +23,6 @@ using dnlib.DotNet;
 using dnlib.DotNet.Writer;
 using de4dot.code;
 using de4dot.code.deobfuscators;
-using de4dot.code.AssemblyClient;
 using de4dot.code.renamer;
 
 namespace de4dot.cui {
@@ -76,15 +75,12 @@ namespace de4dot.cui {
 			stringDecrypterTypes.Add(DecrypterType.None, "none", "Don't decrypt strings");
 			stringDecrypterTypes.Add(DecrypterType.Default, "default", "Use default string decrypter type (usually static)");
 			stringDecrypterTypes.Add(DecrypterType.Static, "static", "Use static string decrypter if available");
-			stringDecrypterTypes.Add(DecrypterType.Delegate, "delegate", "Use a delegate to call the real string decrypter");
-			stringDecrypterTypes.Add(DecrypterType.Emulate, "emulate", "Call real string decrypter and emulate certain instructions");
 		}
 
 		public CommandLineParser(IList<IDeobfuscatorInfo> deobfuscatorInfos, FilesDeobfuscator.Options filesOptions) {
 			this.deobfuscatorInfos = deobfuscatorInfos;
 			this.filesOptions = filesOptions;
 			this.filesOptions.DeobfuscatorInfos = deobfuscatorInfos;
-			this.filesOptions.AssemblyClientFactory = new NewAppDomainAssemblyClientFactory();
 
 			AddAllOptions();
 		}
@@ -170,9 +166,6 @@ namespace de4dot.cui {
 				// --dont-rename
 				filesOptions.RenameSymbols = false;
 				filesOptions.RenamerFlags = 0;
-			}));
-			miscOptions.Add(new NoArgOption(null, "load-new-process", "Load executed assemblies into a new process", () => {
-				filesOptions.AssemblyClientFactory = new NewProcessAssemblyClientFactory();
 			}));
 			miscOptions.Add(new NoArgOption(null, "keep-types", "Keep obfuscator types, fields, methods", () => {
 				newFileOptions.KeepObfuscatorTypes = true;
@@ -345,7 +338,7 @@ namespace de4dot.cui {
 		void AddFile() {
 			if (newFileOptions == null)
 				return;
-			files.Add(new ObfuscatedFile(newFileOptions, filesOptions.ModuleContext, filesOptions.AssemblyClientFactory));
+			files.Add(new ObfuscatedFile(newFileOptions, filesOptions.ModuleContext));
 			newFileOptions = null;
 		}
 

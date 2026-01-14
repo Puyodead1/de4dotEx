@@ -35,16 +35,13 @@ namespace de4dot.code.deobfuscators {
 		Default,
 		None,
 		Static,
-		Delegate,
-		Emulate,
 	}
 
 	[Flags]
 	public enum StringFeatures {
 		AllowNoDecryption = 1,
 		AllowStaticDecryption = 2,
-		AllowDynamicDecryption = 4,
-		AllowAll = AllowNoDecryption | AllowStaticDecryption | AllowDynamicDecryption,
+		AllowAll = AllowNoDecryption | AllowStaticDecryption,
 	}
 
 	[Flags]

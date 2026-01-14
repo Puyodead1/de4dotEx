@@ -26,11 +26,9 @@ using dnlib.DotNet;
 using dnlib.DotNet.Emit;
 using dnlib.DotNet.Writer;
 using dnlib.PE;
-using AssemblyData;
 using de4dot.code.deobfuscators;
 using de4dot.blocks;
 using de4dot.blocks.cflow;
-using de4dot.code.AssemblyClient;
 using de4dot.code.renamer;
 
 namespace de4dot.code {
@@ -40,9 +38,6 @@ namespace de4dot.code {
 		IDeobfuscator deob;
 		IDeobfuscatorContext deobfuscatorContext;
 		AssemblyModule assemblyModule;
-		IAssemblyClient assemblyClient;
-		DynamicStringInliner dynamicStringInliner;
-		IAssemblyClientFactory assemblyClientFactory;
 		SavedMethodBodies savedMethodBodies;
 		bool userStringDecrypterMethods = false;
 
@@ -108,8 +103,7 @@ namespace de4dot.code {
 			set => deobfuscatorContext = value;
 		}
 
-		public ObfuscatedFile(Options options, ModuleContext moduleContext, IAssemblyClientFactory assemblyClientFactory) {
-			this.assemblyClientFactory = assemblyClientFactory;
+		public ObfuscatedFile(Options options, ModuleContext moduleContext) {
 			this.options = options;
 			userStringDecrypterMethods = options.StringDecrypterMethods.Count > 0;
 			options.Filename = Utils.GetFullPath(options.Filename);
@@ -372,17 +366,6 @@ namespace de4dot.code {
 				CheckSupportedStringDecrypter(StringFeatures.AllowStaticDecryption);
 				break;
 
-			case DecrypterType.Delegate:
-			case DecrypterType.Emulate:
-				CheckSupportedStringDecrypter(StringFeatures.AllowDynamicDecryption);
-				var newProcFactory = assemblyClientFactory as NewProcessAssemblyClientFactory;
-				if (newProcFactory != null)
-					assemblyClient = newProcFactory.Create(AssemblyServiceType.StringDecrypter, module);
-				else
-					assemblyClient = assemblyClientFactory.Create(AssemblyServiceType.StringDecrypter);
-				assemblyClient.Connect();
-				break;
-
 			default:
 				throw new ApplicationException($"Invalid string decrypter type '{options.StringDecrypterType}'");
 			}
@@ -396,7 +379,6 @@ namespace de4dot.code {
 
 		public void Deobfuscate() {
 			Logger.n("Cleaning {0}", options.Filename);
-			InitAssemblyClient();
 
 			for (int i = 0; ; i++) {
 				byte[] fileData = null;
@@ -408,8 +390,6 @@ namespace de4dot.code {
 
 			deob.DeobfuscateBegin();
 			DeobfuscateMethods();
-			if (options.StringDecrypterType == DecrypterType.Delegate || options.StringDecrypterType == DecrypterType.Emulate)
-				dynamicStringInliner.LogUnusedDecrypters();
 			deob.DeobfuscateEnd();
 		}
 
@@ -422,36 +402,12 @@ namespace de4dot.code {
 			}
 			InitializeDeobfuscator();
 			deob.DeobfuscatedFile = this;
-			UpdateDynamicStringInliner();
 		}
 
 		DumpedMethodsRestorer CreateDumpedMethodsRestorer(DumpedMethods dumpedMethods) {
 			if (dumpedMethods == null || dumpedMethods.Count == 0)
 				return null;
 			return new DumpedMethodsRestorer(dumpedMethods);
-		}
-
-		void InitAssemblyClient() {
-			if (assemblyClient == null)
-				return;
-
-			assemblyClient.WaitConnected();
-			assemblyClient.StringDecrypterService.LoadAssembly(options.Filename);
-
-			if (options.StringDecrypterType == DecrypterType.Delegate)
-				assemblyClient.StringDecrypterService.SetStringDecrypterType(AssemblyData.StringDecrypterType.Delegate);
-			else if (options.StringDecrypterType == DecrypterType.Emulate)
-				assemblyClient.StringDecrypterService.SetStringDecrypterType(AssemblyData.StringDecrypterType.Emulate);
-			else
-				throw new ApplicationException($"Invalid string decrypter type '{options.StringDecrypterType}'");
-
-			dynamicStringInliner = new DynamicStringInliner(assemblyClient);
-			UpdateDynamicStringInliner();
-		}
-
-		void UpdateDynamicStringInliner() {
-			if (dynamicStringInliner != null)
-				dynamicStringInliner.Initialize(GetMethodTokens());
 		}
 
 		IEnumerable<int> GetMethodTokens() {
@@ -565,10 +521,7 @@ namespace de4dot.code {
 		}
 
 		public void DeobfuscateCleanUp() {
-			if (assemblyClient != null) {
-				assemblyClient.Dispose();
-				assemblyClient = null;
-			}
+			
 		}
 
 		void DeobfuscateMethods() {
@@ -709,12 +662,6 @@ namespace de4dot.code {
 			case DecrypterType.Static:
 				deob.DeobfuscateStrings(blocks);
 				break;
-
-			case DecrypterType.Delegate:
-			case DecrypterType.Emulate:
-				dynamicStringInliner.Decrypt(blocks);
-				break;
-
 			default:
 				throw new ApplicationException($"Invalid string decrypter type '{options.StringDecrypterType}'");
 			}
@@ -837,8 +784,6 @@ namespace de4dot.code {
 			Logger.n("Creating file {0}", newName);
 			File.WriteAllBytes(newName, data);
 		}
-
-		void IDeobfuscatedFile.StringDecryptersAdded() => UpdateDynamicStringInliner();
 
 		void IDeobfuscatedFile.SetDeobfuscator(IDeobfuscator deob) => this.deob = deob;
 
